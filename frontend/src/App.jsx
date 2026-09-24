@@ -7,6 +7,8 @@ import SustainabilityImpact from "./components/SustainabilityImpact";
 import IntersectionDiagram from "./components/IntersectionDiagram";
 import CycleTimeline from "./components/CycleTimeline";
 import InsightsPanel from "./components/InsightsPanel";
+import UserAuth from "./components/UserAuth";
+import AIChatbot from "./components/AIChatbot";
 import { useScenarioTransition } from "./hooks/useScenarioTransition";
 import "./App.css";
 
@@ -82,7 +84,10 @@ export default function App() {
               AI-assisted traffic signal optimization
             </p>
           </div>
-          <SignalHead status={status} />
+          <div className="app-header-right">
+            <SignalHead status={status} />
+            <UserAuth />
+          </div>
         </div>
         <div className="lane-line" aria-hidden="true" />
       </header>
@@ -173,6 +178,8 @@ export default function App() {
           </>
         )}
       </main>
+
+      <AIChatbot currentContext={result} />
     </div>
   );
 }
