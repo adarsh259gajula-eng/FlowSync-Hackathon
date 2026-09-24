@@ -1,3 +1,7 @@
+from traffic.config import (
+    CO2_KG_PER_LITER,
+    IDLE_FUEL_RATE_L_PER_VEHICLE_HOUR,
+)
 
 def delay_reduction_to_vehicle_hours(
     delay_reduction: float,
@@ -13,7 +17,7 @@ def delay_reduction_to_vehicle_hours(
 
 def estimate_fuel_saved(
     vehicle_hours_saved: float,
-    idle_fuel_rate_lph: float = 0.6,
+    idle_fuel_rate_lph: float = IDLE_FUEL_RATE_L_PER_VEHICLE_HOUR,
 ) -> float:
 
     if vehicle_hours_saved < 0:
@@ -26,7 +30,7 @@ def estimate_fuel_saved(
 
 def estimate_co2_saved(
     fuel_saved_liters: float,
-    co2_factor_kg_per_liter: float = 2.31,
+    co2_factor_kg_per_liter: float = CO2_KG_PER_LITER,
 ) -> float:
 
     if fuel_saved_liters < 0:
