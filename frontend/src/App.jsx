@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import PrivacyPage from './components/PrivacyPage';
+import SupportPage from './components/SupportPage';
+import { LiveMapTab, CongestionTab, SignalsTab, EcoImpactTab, CommunityTab } from './components/DashboardTabs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Map, Activity, Sliders, Wind, MessageSquare, 
@@ -6,7 +9,7 @@ import {
   Send, Smile, Paperclip, Droplet, Clock, BarChart2,
   X, LogOut, Edit2, Camera, Image as ImageIcon,
   MapPin, Mail, Rss, ArrowRight, Globe, Phone, MessageCircle,
-  UserPlus, Shield, LifeBuoy
+  UserPlus, Shield, LifeBuoy, Navigation
 } from 'lucide-react';
 
 // --- CONSTANTS & MOCK DATA ---
@@ -18,10 +21,10 @@ const COLORS = {
 };
 
 const metrics = {
-  traffic: { vehicle_count: 150, avg_speed: 12.5, vehicle_density: 0.88 },
-  baseline: { delay: 2045.18, north_south_green: 41, east_west_green: 41 },
-  optimized: { delay: 1960.00, delay_reduction: 85.18, north_south_green: 51, east_west_green: 31 },
-  impact: { co2_reduction: 0.0328, fuel_reduction: 0.0142, time_saved: 0.023 }
+  observation: { timestamp: "08:17:00", vehicle_count: 72, avg_speed: 35.7, vehicle_density: 67.0, congestion_level: "High" },
+  baseline: { north_south_green: 41, east_west_green: 41, delay: 970.5 },
+  optimized: { north_south_green: 51, east_west_green: 31, delay: 930.93, delay_reduction: 39.57 },
+  impact: { vehicle_hours_saved: 0.01099, fuel_saved_liters: 0.00879, co2_saved_kg: 0.02023 }
 };
 
 export default function App() {
@@ -63,7 +66,7 @@ export default function App() {
         const data = await res.json();
         if (data && data.optimized) {
            setAppMetrics({
-             traffic: data.traffic,
+             observation: data.observation || data.traffic,
              baseline: data.baseline,
              optimized: data.optimized,
              impact: data.impact || appMetrics.impact
@@ -108,6 +111,25 @@ export default function App() {
       }
     } catch (e) {
       alert("Error searching location.");
+    }
+  };
+
+  const handleLocateMe = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setMapCenter({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error("Error obtaining location", error);
+          alert("Could not get your location. Please check browser permissions.");
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by this browser.");
     }
   };
 
@@ -200,7 +222,7 @@ export default function App() {
 
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 md:px-12 flex justify-between items-center bg-[#0B0E14]/80 backdrop-blur-md border-b border-white/5">
-        <div className="text-xl font-bold tracking-tight flex items-center gap-3">
+        <div className="text-xl font-extrabold tracking-tight flex items-center gap-3">
           <img src="/logo.png" alt="FlowSync Logo" className="w-8 h-8 object-contain drop-shadow-md" />
           <span>FlowSync</span>
         </div>
@@ -331,7 +353,7 @@ export default function App() {
             </p>
               <div className="bg-white/5 rounded-lg p-3 border border-white/5">
               <p className="text-xs text-gray-500 mb-1">Live Speed</p>
-              <p className="text-xl font-bold text-white">{appMetrics.traffic.avg_speed.toFixed(1)} <span className="text-sm text-gray-500 font-normal">km/h</span></p>
+              <p className="text-xl font-bold text-white">{appMetrics.observation.avg_speed.toFixed(1)} <span className="text-sm text-gray-500 font-normal">km/h</span></p>
             </div>
           </div>
           
@@ -359,7 +381,7 @@ export default function App() {
             </p>
             <div className="bg-white/5 rounded-lg p-3 border border-white/5">
               <p className="text-xs text-gray-500 mb-1">CO2 Prevented</p>
-              <p className="text-xl font-bold text-green-400">{appMetrics.impact.co2_reduction.toFixed(3)} <span className="text-sm text-gray-500 font-normal">kg</span></p>
+              <p className="text-xl font-bold text-green-400">{appMetrics.impact.co2_saved_kg.toFixed(3)} <span className="text-sm text-gray-500 font-normal">kg</span></p>
             </div>
           </div>
 
@@ -432,7 +454,7 @@ export default function App() {
       <footer className="w-full border-t border-white/10 py-12 px-6 md:px-12 mt-auto text-sm text-gray-500 flex flex-col md:flex-row justify-between items-center z-10 relative bg-[#0B0E14]">
         <div className="flex items-center gap-2 mb-4 md:mb-0">
            <img src="/logo.png" alt="FlowSync Logo" className="w-5 h-5 object-contain opacity-70" />
-           <span className="text-gray-400 font-bold">FlowSync Inc. &copy; 2026</span>
+           <span className="text-gray-400 font-extrabold tracking-tight">FlowSync Inc. &copy; 2026</span>
         </div>
         <div className="flex gap-8">
            <button onClick={() => setCurrentView('privacy')} className="hover:text-white transition-colors flex items-center gap-2"><Shield size={14}/> Privacy Policy</button>
@@ -445,16 +467,25 @@ export default function App() {
   // ---------------------------------------------------------------------------
   // 2. FLOWSYNC APP UI (Mobile Layout Replica)
   // ---------------------------------------------------------------------------
-  const renderAppView = () => (
-    <div className="relative h-screen w-full flex flex-col overflow-hidden font-sans mx-auto shadow-2xl" style={{ backgroundColor: theme.bg }}>
+  const renderAppView = () => {
+    if (!appMetrics) {
+      return (
+        <div className="flex h-screen w-full items-center justify-center bg-[#0B0E14]">
+          <div className="text-teal-400 font-bold animate-pulse text-xl">Connecting to FlowSync Backend...</div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative h-screen w-full flex flex-col overflow-hidden font-sans mx-auto shadow-2xl" style={{ backgroundColor: theme.bg }}>
       
       {/* Top Header */}
       <div className="h-16 px-4 flex items-center justify-between border-b z-20 backdrop-blur-md" style={{ borderColor: theme.border, backgroundColor: isDarkMode ? 'rgba(11, 14, 20, 0.8)' : 'rgba(248, 249, 250, 0.8)' }}>
         {/* Left: Logo */}
         <div className="flex items-center cursor-pointer w-48" onClick={() => setCurrentView('landing')}>
-          <div className="text-lg font-bold tracking-widest flex items-center gap-2">
-            <img src="/logo.png" alt="FlowSync Logo" className="w-6 h-6 object-contain" />
-            <span className="text-[#2DD4BF]">FLOW</span><span style={{ color: theme.text }}>SYNC</span>
+          <div className="text-xl font-extrabold tracking-tight flex items-center gap-3">
+            <img src="/logo.png" alt="FlowSync Logo" className="w-8 h-8 object-contain" />
+            <span style={{ color: theme.text }}>FlowSync</span>
           </div>
         </div>
         
@@ -527,111 +558,30 @@ export default function App() {
       {/* Main Content Area */}
       <div className="flex-1 relative">
         {activePage === 'tab_live_map' && (
-          <div className="absolute inset-0 z-0">
-            <iframe 
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCenter.lon-0.02}%2C${mapCenter.lat-0.02}%2C${mapCenter.lon+0.02}%2C${mapCenter.lat+0.02}&layer=mapnik&marker=${mapCenter.lat},${mapCenter.lon}`}
-              className="w-full h-full border-0 pointer-events-none"
-              style={{ filter: isDarkMode ? 'invert(90%) hue-rotate(180deg)' : 'none' }}
-              title="Map"
-            />
-            
-            {/* Floating Search Bar */}
-            <form onSubmit={handleSearch} className="absolute top-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-[#0B0E14]/95 backdrop-blur-md border border-white/10 rounded-2xl flex items-center px-4 py-3 shadow-2xl z-10">
-              <Search size={20} className="text-slate-400 mr-3" />
-              <input 
-                type="text" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search road or area..." 
-                className="bg-transparent border-none focus:outline-none text-white w-full text-base placeholder:text-slate-500"
-              />
-            </form>
-
-            {/* Floating Action Buttons */}
-            <div className="absolute bottom-[100px] right-6 flex flex-col gap-4 z-10">
-              <button onClick={() => handleFlagTraffic('Traffic')} className="w-14 h-14 rounded-full bg-red-500 flex flex-col items-center justify-center shadow-lg hover:scale-105 transition-transform border-2 border-white/20">
-                <AlertTriangle size={24} className="text-white" />
-                <span className="text-[9px] font-bold text-white uppercase mt-0.5 shadow-sm">Traffic</span>
-              </button>
-              <button onClick={() => handleFlagTraffic('Blockage')} className="w-14 h-14 rounded-full bg-orange-500 flex flex-col items-center justify-center shadow-lg hover:scale-105 transition-transform border-2 border-white/20">
-                <AlertOctagon size={24} className="text-white" />
-                <span className="text-[9px] font-bold text-white uppercase mt-0.5 shadow-sm">Blockage</span>
-              </button>
-              <button onClick={() => handleFlagTraffic('Work')} className="w-14 h-14 rounded-full bg-yellow-500 flex flex-col items-center justify-center shadow-lg hover:scale-105 transition-transform border-2 border-white/20">
-                <AlertTriangle size={24} className="text-white" />
-                <span className="text-[9px] font-bold text-white uppercase mt-0.5 shadow-sm">Work</span>
-              </button>
-            </div>
-          </div>
+          <LiveMapTab 
+            isDarkMode={isDarkMode} 
+            mapCenter={mapCenter} 
+            searchQuery={searchQuery} 
+            setSearchQuery={setSearchQuery} 
+            handleSearch={handleSearch} 
+            handleLocateMe={handleLocateMe} 
+            handleFlagTraffic={handleFlagTraffic} 
+          />
         )}
         
         {activePage === 'tab_community' && (
-          <div className="absolute inset-0 z-10 flex flex-col" style={{ backgroundColor: theme.bg }}>
-            <div className="p-5 border-b" style={{ borderColor: theme.border }}>
-              <h2 className="font-bold text-lg flex items-center" style={{ color: theme.text }}>
-                <MessageSquare size={18} className="mr-2 text-slate-400" />
-                Live Community Updates
-              </h2>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              {chatMessages.map((msg) => (
-                <div key={msg.id} className={`flex flex-col max-w-[80%] ${msg.user === (currentUser?.name || 'You') ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs" style={{ color: theme.textMuted }}>{msg.user}</span>
-                    <span className="text-[10px]" style={{ color: theme.textMuted }}>{msg.time}</span>
-                  </div>
-                  <div className={`px-4 py-3 rounded-2xl text-sm border ${
-                    msg.user === (currentUser?.name || 'You')
-                      ? 'bg-teal-500 text-black border-transparent' 
-                      : msg.type === 'alert'
-                        ? 'bg-red-500/20 border-red-500 text-white'
-                        : 'bg-black/40 border-white/10 text-white'
-                  }`}>
-                    {msg.image && <img src={msg.image} alt="upload" className="max-w-[200px] rounded-lg mb-2" />}
-                    {msg.text && <span>{msg.text}</span>}
-                  </div>
-                  {/* Reactions */}
-                  <div className={`flex gap-2 mt-1 ${msg.user === (currentUser?.name || 'You') ? 'justify-end' : 'justify-start'}`}>
-                    {['👍', '⚠️', '❤️', '😱'].map(emoji => {
-                      const count = msg.reactions?.[emoji] || 0;
-                      return (
-                        <button key={emoji} onClick={() => toggleReaction(msg.id, emoji)} className={`px-2 py-1 rounded-full text-xs border ${count > 0 ? 'border-teal-500 bg-teal-500/20 text-white' : 'border-white/10 text-slate-400'}`}>
-                          {emoji} {count > 0 ? count : ''}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-
-            <div className="p-4 border-t" style={{ borderColor: theme.border, backgroundColor: theme.bg }}>
-              <form onSubmit={handleSendMessage} className="flex gap-2 items-center max-w-4xl mx-auto w-full">
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  ref={fileInputRef} 
-                  onChange={handleImageUpload} 
-                  className="hidden" 
-                />
-                <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 text-slate-400 hover:text-white mr-1 transition-colors">
-                  <ImageIcon size={20} />
-                </button>
-                <input
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  placeholder="Report traffic or reply..."
-                  className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-3 text-sm focus:outline-none focus:border-teal-500 transition-colors"
-                  style={{ color: theme.text }}
-                />
-                <button type="submit" disabled={!inputText.trim()} className="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-black disabled:opacity-50 ml-1 hover:bg-teal-400 transition-colors shadow-lg">
-                  <Send size={16} className="ml-1" />
-                </button>
-              </form>
-            </div>
-          </div>
+          <CommunityTab 
+            theme={theme} 
+            chatMessages={chatMessages} 
+            currentUser={currentUser} 
+            toggleReaction={toggleReaction} 
+            messagesEndRef={messagesEndRef} 
+            handleSendMessage={handleSendMessage} 
+            fileInputRef={fileInputRef} 
+            handleImageUpload={handleImageUpload} 
+            inputText={inputText} 
+            setInputText={setInputText} 
+          />
         )}
         
         {activePage === 'nav_profile' && (
@@ -670,89 +620,15 @@ export default function App() {
         )}
 
         {activePage === 'tab_congestion' && (
-          <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="absolute inset-0 z-10 flex flex-col items-center pt-24 px-4 overflow-y-auto pb-32" style={{ backgroundColor: theme.bg }}>
-            <div className="w-full max-w-2xl bg-[#0B0E14]/95 backdrop-blur-xl rounded-3xl p-8 border border-white/12 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-              <h3 className="text-white text-xl font-bold mb-6">Intersection Traffic Telemetry</h3>
-            <div className="flex items-center bg-white/5 p-4 rounded-2xl mb-4 border border-white/10">
-              <BarChart2 size={24} className="text-red-500" />
-              <div className="ml-4 flex-1">
-                <p className="text-white font-bold">{appMetrics.traffic.vehicle_count} Vehicles Detected</p>
-                <p className="text-slate-400 text-xs">Corridor operating at {(appMetrics.traffic.vehicle_density * 100).toFixed(0)}% capacity. Delay spike imminent.</p>
-              </div>
-              <div className="bg-red-500/20 px-3 py-1.5 rounded-xl border border-red-500 text-red-500 text-[10px] font-bold">
-                HEAVY TRAFFIC
-              </div>
-            </div>
-            <div className="flex justify-between bg-white/5 p-1 rounded-xl">
-              {['Low', 'Medium', 'High'].map(level => (
-                <div key={level} className={`flex-1 text-center py-2 rounded-lg ${level === 'High' ? 'bg-white/10 text-white font-bold' : 'text-slate-400'}`}>
-                  {level}
-                </div>
-              ))}
-            </div>
-            </div>
-          </motion.div>
+          <CongestionTab appMetrics={appMetrics} theme={theme} />
         )}
         
         {activePage === 'tab_signals' && (
-          <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="absolute inset-0 z-10 flex flex-col items-center pt-24 px-4 overflow-y-auto pb-32" style={{ backgroundColor: theme.bg }}>
-            <div className="w-full max-w-2xl bg-[#0B0E14]/95 backdrop-blur-xl rounded-3xl p-8 border border-white/12 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-              <h3 className="text-white text-xl font-bold mb-6">Adaptive Signal Timing Model</h3>
-            <div className="bg-teal-500/20 p-4 rounded-2xl text-center mb-4 border border-teal-500">
-              <p className="text-teal-400 text-lg font-bold">Delay Reduced by {appMetrics.optimized.delay_reduction.toFixed(2)}s</p>
-            </div>
-            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-              <div className="flex justify-between mb-3 border-b border-white/10 pb-2 text-slate-400 text-sm">
-                <span className="flex-[2]">Lane</span>
-                <span className="flex-1 text-center">Base</span>
-                <span className="flex-1 text-center">Opt</span>
-                <span className="flex-[1.5] text-right">Delta</span>
-              </div>
-              {[
-                { lane: 'N-S Green', base: `${appMetrics.baseline.north_south_green}s`, opt: `${appMetrics.optimized.north_south_green}s`, delta: `+${(appMetrics.optimized.north_south_green - appMetrics.baseline.north_south_green).toFixed(0)}s`, color: 'text-teal-400' },
-                { lane: 'E-W Green', base: `${appMetrics.baseline.east_west_green}s`, opt: `${appMetrics.optimized.east_west_green}s`, delta: `-${(appMetrics.baseline.east_west_green - appMetrics.optimized.east_west_green).toFixed(0)}s`, color: 'text-orange-500' },
-                { lane: 'Total Delay', base: `${appMetrics.baseline.delay.toFixed(1)}s`, opt: `${appMetrics.optimized.delay.toFixed(1)}s`, delta: `-${appMetrics.optimized.delay_reduction.toFixed(1)}s`, color: 'text-teal-400' },
-              ].map((row, i) => (
-                <div key={i} className="flex justify-between mb-3 last:mb-0">
-                  <span className="text-white flex-[2]">{row.lane}</span>
-                  <span className="text-white flex-1 text-center">{row.base}</span>
-                  <span className="text-white flex-1 text-center">{row.opt}</span>
-                  <span className={`${row.color} flex-[1.5] text-right font-bold`}>{row.delta}</span>
-                </div>
-              ))}
-            </div>
-            </div>
-          </motion.div>
+          <SignalsTab appMetrics={appMetrics} theme={theme} />
         )}
         
         {activePage === 'tab_eco_impact' && (
-          <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="absolute inset-0 z-10 flex flex-col items-center pt-24 px-4 overflow-y-auto pb-32" style={{ backgroundColor: theme.bg }}>
-            <div className="w-full max-w-2xl bg-[#0B0E14]/95 backdrop-blur-xl rounded-3xl p-8 border border-white/12 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-              <h3 className="text-white text-xl font-bold mb-6">Green Mobility & Savings</h3>
-            <div className="flex justify-between gap-2 mb-4">
-              <div className="flex-1 flex flex-col items-center bg-white/5 p-4 rounded-2xl border border-white/10">
-                <Wind size={24} className="text-teal-400 mb-2" />
-                <span className="text-teal-400 font-bold">{appMetrics.impact.co2_reduction.toFixed(4)} kg</span>
-                <span className="text-slate-400 text-[10px] mt-1">CO2 Offset</span>
-              </div>
-              <div className="flex-1 flex flex-col items-center bg-white/5 p-4 rounded-2xl border border-white/10">
-                <Droplet size={24} className="text-teal-400 mb-2" />
-                <span className="text-teal-400 font-bold">{appMetrics.impact.fuel_reduction.toFixed(4)} L</span>
-                <span className="text-slate-400 text-[10px] mt-1">Fuel Saved</span>
-              </div>
-              <div className="flex-1 flex flex-col items-center bg-white/5 p-4 rounded-2xl border border-white/10">
-                <Clock size={24} className="text-orange-500 mb-2" />
-                <span className="text-orange-500 font-bold">{appMetrics.impact.time_saved.toFixed(3)} hrs</span>
-                <span className="text-slate-400 text-[10px] mt-1">Regained</span>
-              </div>
-            </div>
-            <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
-              <p className="text-white text-xs italic text-center leading-relaxed">
-                "Signal timing optimization prevented {appMetrics.impact.co2_reduction.toFixed(3)}kg of idling carbon emissions on this cycle."
-              </p>
-            </div>
-            </div>
-          </motion.div>
+          <EcoImpactTab appMetrics={appMetrics} theme={theme} />
         )}
       </div>
 
@@ -799,65 +675,14 @@ export default function App() {
       </AnimatePresence>
     </div>
   );
-
-  const renderPrivacyPage = () => (
-    <div className="min-h-screen bg-[#0B0E14] text-white p-8 md:p-20 font-sans">
-      <button onClick={() => setCurrentView('landing')} className="flex items-center gap-2 text-teal-400 hover:text-teal-300 mb-10"><ArrowRight className="rotate-180" size={16}/> Back to Home</button>
-      <div className="max-w-3xl mx-auto bg-white/5 p-10 rounded-3xl border border-white/10 shadow-2xl">
-        <div className="flex items-center gap-4 mb-8">
-          <Shield size={32} className="text-teal-400" />
-          <h1 className="text-4xl font-bold">Privacy Policy</h1>
-        </div>
-        <div className="space-y-6 text-gray-300 leading-relaxed">
-          <p>Last updated: September 2026</p>
-          <h2 className="text-xl font-bold text-white mt-8">1. Information We Collect</h2>
-          <p>FlowSync collects telemetry data, location data, and user-submitted incident reports to optimize city-wide traffic grids. We ensure all locational data is fully anonymized.</p>
-          <h2 className="text-xl font-bold text-white mt-8">2. How We Use Your Data</h2>
-          <p>We use your data solely for real-time signal optimization, congestion forecasting, and calculating carbon footprint reductions.</p>
-          <h2 className="text-xl font-bold text-white mt-8">3. Data Security</h2>
-          <p>We implement state-of-the-art encryption to secure all transit network data streams and user reports against unauthorized access.</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderSupportPage = () => (
-    <div className="min-h-screen bg-[#0B0E14] text-white p-8 md:p-20 font-sans">
-      <button onClick={() => setCurrentView('landing')} className="flex items-center gap-2 text-teal-400 hover:text-teal-300 mb-10"><ArrowRight className="rotate-180" size={16}/> Back to Home</button>
-      <div className="max-w-3xl mx-auto bg-white/5 p-10 rounded-3xl border border-white/10 shadow-2xl">
-        <div className="flex items-center gap-4 mb-8">
-          <LifeBuoy size={32} className="text-teal-400" />
-          <h1 className="text-4xl font-bold">FlowSync Support</h1>
-        </div>
-        <div className="space-y-6 text-gray-300 leading-relaxed">
-          <p>Need help integrating FlowSync OS 2.0 with your municipal grid?</p>
-          <div className="grid gap-4 mt-8">
-             <div className="bg-black/20 p-6 rounded-xl border border-white/5 flex items-center gap-4">
-                <Mail size={24} className="text-teal-400"/>
-                <div>
-                   <h3 className="font-bold text-white">Email Support</h3>
-                   <p className="text-sm">support@flowsync.city</p>
-                </div>
-             </div>
-             <div className="bg-black/20 p-6 rounded-xl border border-white/5 flex items-center gap-4">
-                <Phone size={24} className="text-blue-400"/>
-                <div>
-                   <h3 className="font-bold text-white">Emergency Engineering Hotline</h3>
-                   <p className="text-sm">1-800-FLOW-NET</p>
-                </div>
-             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+};
 
   return (
     <>
       {currentView === 'landing' && renderLandingPage()}
       {currentView === 'app' && renderAppView()}
-      {currentView === 'privacy' && renderPrivacyPage()}
-      {currentView === 'support' && renderSupportPage()}
+      {currentView === 'privacy' && <PrivacyPage setCurrentView={setCurrentView} />}
+      {currentView === 'support' && <SupportPage setCurrentView={setCurrentView} />}
     </>
   );
 }
