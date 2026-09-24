@@ -201,9 +201,7 @@ export default function App() {
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 md:px-12 flex justify-between items-center bg-[#0B0E14]/80 backdrop-blur-md border-b border-white/5">
         <div className="text-xl font-bold tracking-tight flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center shadow-lg shadow-teal-500/20">
-            <Activity size={18} className="text-white" />
-          </div>
+          <img src="/logo.png" alt="FlowSync Logo" className="w-8 h-8 object-contain drop-shadow-md" />
           <span>FlowSync</span>
         </div>
         <div className="hidden lg:flex items-center gap-8 text-sm font-medium text-gray-400">
@@ -433,7 +431,7 @@ export default function App() {
       {/* Footer */}
       <footer className="w-full border-t border-white/10 py-12 px-6 md:px-12 mt-auto text-sm text-gray-500 flex flex-col md:flex-row justify-between items-center z-10 relative bg-[#0B0E14]">
         <div className="flex items-center gap-2 mb-4 md:mb-0">
-           <Activity size={16} className="text-teal-500" />
+           <img src="/logo.png" alt="FlowSync Logo" className="w-5 h-5 object-contain opacity-70" />
            <span className="text-gray-400 font-bold">FlowSync Inc. &copy; 2026</span>
         </div>
         <div className="flex gap-8">
@@ -454,7 +452,8 @@ export default function App() {
       <div className="h-16 px-4 flex items-center justify-between border-b z-20 backdrop-blur-md" style={{ borderColor: theme.border, backgroundColor: isDarkMode ? 'rgba(11, 14, 20, 0.8)' : 'rgba(248, 249, 250, 0.8)' }}>
         {/* Left: Logo */}
         <div className="flex items-center cursor-pointer w-48" onClick={() => setCurrentView('landing')}>
-          <div className="text-lg font-bold tracking-widest flex items-center">
+          <div className="text-lg font-bold tracking-widest flex items-center gap-2">
+            <img src="/logo.png" alt="FlowSync Logo" className="w-6 h-6 object-contain" />
             <span className="text-[#2DD4BF]">FLOW</span><span style={{ color: theme.text }}>SYNC</span>
           </div>
         </div>
