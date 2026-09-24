@@ -35,10 +35,10 @@ export default function App() {
   const [editPhone, setEditPhone] = useState('');
   const [editDob, setEditDob] = useState('');
   const [metrics, setMetrics] = useState({
-    traffic: { vehicle_count: 150, avg_speed: 12.5, vehicle_density: 0.88 },
-    baseline: { delay: 2045.18, north_south_green: 41, east_west_green: 41 },
-    optimized: { delay: 1960.00, delay_reduction: 85.18, north_south_green: 51, east_west_green: 31 },
-    impact: { co2_reduction: 0.0328, fuel_reduction: 0.0142, time_saved: 0.023 }
+    observation: { timestamp: "08:17:00", vehicle_count: 72, avg_speed: 35.7, vehicle_density: 67.0, congestion_level: "High" },
+    baseline: { delay: 970.5, north_south_green: 41, east_west_green: 41 },
+    optimized: { delay: 930.93, delay_reduction: 39.57, north_south_green: 51, east_west_green: 31 },
+    impact: { vehicle_hours_saved: 0.01099, fuel_saved_liters: 0.00879, co2_saved_kg: 0.02023 }
   });
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function App() {
         const data = await res.json();
         if (data && data.optimized) {
            setMetrics({
-             traffic: data.traffic,
+             observation: data.observation || data.traffic,
              baseline: data.baseline,
              optimized: data.optimized,
              impact: data.impact || metrics.impact
@@ -764,8 +764,8 @@ export default function App() {
       <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: 16, borderRadius: 16, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
         <Feather name="bar-chart-2" size={24} color={COLORS.red} />
         <View style={{ marginLeft: 16, flex: 1 }}>
-          <Text style={{ color: theme.text, fontSize: 16, fontWeight: 'bold' }}>{metrics.traffic.vehicle_count} Vehicles Detected</Text>
-          <Text style={{ color: theme.textMuted, fontSize: 12 }}>Corridor operating at {(metrics.traffic.vehicle_density * 100).toFixed(0)}% capacity. Delay spike imminent.</Text>
+          <Text style={{ color: theme.text, fontSize: 16, fontWeight: 'bold' }}>{metrics.observation.vehicle_count} Vehicles Detected</Text>
+          <Text style={{ color: theme.textMuted, fontSize: 12 }}>Corridor operating at {(metrics.observation.vehicle_density).toFixed(0)}% capacity. Delay spike imminent.</Text>
         </View>
         <View style={{ backgroundColor: COLORS.redGlow, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: COLORS.red }}>
           <Text style={{ color: COLORS.red, fontSize: 10, fontWeight: 'bold' }}>HEAVY TRAFFIC</Text>
@@ -816,23 +816,23 @@ export default function App() {
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
         <View style={{ flex: 1, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: 16, borderRadius: 16, marginRight: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
           <Feather name="wind" size={24} color={COLORS.green} style={{ marginBottom: 8 }} />
-          <Text style={{ color: COLORS.green, fontSize: 14, fontWeight: 'bold' }}>{(metrics.impact.co2_reduction || metrics.impact.co2_saved_kg || 0.0328).toFixed(4)} kg</Text>
+          <Text style={{ color: COLORS.green, fontSize: 14, fontWeight: 'bold' }}>{(metrics.impact.co2_saved_kg).toFixed(4)} kg</Text>
           <Text style={{ color: theme.textMuted, fontSize: 10, marginTop: 4 }}>CO2 Offset</Text>
         </View>
         <View style={{ flex: 1, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: 16, borderRadius: 16, marginRight: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
           <Feather name="droplet" size={24} color={COLORS.green} style={{ marginBottom: 8 }} />
-          <Text style={{ color: COLORS.green, fontSize: 14, fontWeight: 'bold' }}>{(metrics.impact.fuel_reduction || metrics.impact.fuel_saved_l || 0.0142).toFixed(4)} L</Text>
+          <Text style={{ color: COLORS.green, fontSize: 14, fontWeight: 'bold' }}>{(metrics.impact.fuel_saved_liters).toFixed(4)} L</Text>
           <Text style={{ color: theme.textMuted, fontSize: 10, marginTop: 4 }}>Fuel Saved</Text>
         </View>
         <View style={{ flex: 1, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
           <Feather name="clock" size={24} color={COLORS.orange} style={{ marginBottom: 8 }} />
-          <Text style={{ color: COLORS.orange, fontSize: 14, fontWeight: 'bold' }}>{(metrics.impact.time_saved || metrics.impact.time_saved_hrs || 0.023).toFixed(3)} hrs</Text>
+          <Text style={{ color: COLORS.orange, fontSize: 14, fontWeight: 'bold' }}>{(metrics.impact.vehicle_hours_saved).toFixed(3)} hrs</Text>
           <Text style={{ color: theme.textMuted, fontSize: 10, marginTop: 4 }}>Regained</Text>
         </View>
       </View>
       <View style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
         <Text style={{ color: theme.text, fontSize: 12, lineHeight: 18, fontStyle: 'italic', textAlign: 'center' }}>
-          "Signal timing optimization prevented {(metrics.impact.co2_reduction || metrics.impact.co2_saved_kg || 0.0328).toFixed(3)}kg of idling carbon emissions on this cycle."
+          "Signal timing optimization prevented {(metrics.impact.co2_saved_kg).toFixed(3)}kg of idling carbon emissions on this cycle."
         </Text>
       </View>
     </View>
