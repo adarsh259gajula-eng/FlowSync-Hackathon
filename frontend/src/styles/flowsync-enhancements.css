@@ -1,0 +1,196 @@
+/* ============================================================
+   FlowSync — enhancement additions
+   Append this to the existing theme file (or import after it).
+   Reuses the existing tokens: --bg, --panel, --panel-alt, --border,
+   --text, --text-dim, --amber, --teal, --red, --radius.
+   ============================================================ */
+
+/* ---------- sustainability: comparison chart ---------- */
+
+.impact-comparison-group {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.impact-comparison-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.impact-comparison-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.impact-comparison-label {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.impact-comparison-delta {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--teal);
+}
+
+.impact-comparison-track {
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  height: 10px;
+  overflow: hidden;
+}
+
+.impact-comparison-fill {
+  height: 100%;
+  border-radius: var(--radius);
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.impact-comparison-fill-optimized {
+  background: var(--teal);
+}
+
+.impact-comparison-figures {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.impact-comparison-figure-optimized {
+  color: var(--teal);
+}
+
+/* ---------- insights panel ---------- */
+
+.insights-panel .panel-title {
+  margin-bottom: 12px;
+}
+
+.insights-narrative {
+  margin: 0 0 4px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text);
+  max-width: 68ch;
+}
+
+.insight-flag-list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.insight-flag {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.insight-flag-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.insight-flag-teal .insight-flag-dot {
+  background: var(--teal);
+}
+
+.insight-flag-amber .insight-flag-dot {
+  background: var(--amber);
+}
+
+.insight-flag-red .insight-flag-dot {
+  background: var(--red);
+}
+
+.insight-flag-text {
+  color: var(--text);
+}
+
+/* ---------- app-level: page-load reveal sequence ---------- */
+
+/* Wrap the top-level panel stack in <div class="reveal-group"> once,
+   on initial mount only. Each direct child panel staggers in. This is
+   the app's one orchestrated motion moment — nothing else should
+   animate on load. */
+
+.reveal-group > * {
+  animation: reveal-up 480ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.reveal-group > *:nth-child(1) { animation-delay: 0ms; }
+.reveal-group > *:nth-child(2) { animation-delay: 70ms; }
+.reveal-group > *:nth-child(3) { animation-delay: 140ms; }
+.reveal-group > *:nth-child(4) { animation-delay: 210ms; }
+.reveal-group > *:nth-child(5) { animation-delay: 280ms; }
+.reveal-group > *:nth-child(6) { animation-delay: 350ms; }
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- app-level: scenario-change transition state ---------- */
+
+/* Applied to the results container (e.g. .results-stack) while a
+   re-analysis is in flight after a scenario input changes. Answers
+   the user's own action rather than firing on its own. */
+
+.scenario-transitioning {
+  opacity: 0.45;
+  filter: saturate(0.7);
+  pointer-events: none;
+  transition: opacity 220ms ease, filter 220ms ease;
+}
+
+.scenario-settling {
+  animation: scenario-settle 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes scenario-settle {
+  from {
+    opacity: 0.6;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-group > * {
+    animation: none;
+  }
+  .scenario-settling {
+    animation: none;
+  }
+  .scenario-transitioning {
+    transition: none;
+  }
+}

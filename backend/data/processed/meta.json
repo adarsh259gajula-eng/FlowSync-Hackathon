@@ -1,0 +1,50 @@
+{
+  "features": [
+    "vehicle_count",
+    "avg_speed",
+    "vehicle_density",
+    "ir_lane1",
+    "ir_lane2",
+    "ir_lane3",
+    "ir_lane4",
+    "ir_active_lanes",
+    "minute_of_hour",
+    "hour_sin",
+    "hour_cos",
+    "vehicle_count_lag1",
+    "vehicle_count_lag5",
+    "vehicle_count_mean5m",
+    "vehicle_count_mean15m",
+    "avg_speed_lag1",
+    "avg_speed_lag5",
+    "avg_speed_mean5m",
+    "avg_speed_mean15m",
+    "vehicle_density_lag1",
+    "vehicle_density_lag5",
+    "vehicle_density_mean5m",
+    "vehicle_density_mean15m",
+    "ir_active_lanes_lag1",
+    "ir_active_lanes_lag5",
+    "ir_active_lanes_mean5m",
+    "ir_active_lanes_mean15m"
+  ],
+  "target": "target_bottleneck",
+  "horizon_min": 5,
+  "naive_baseline_column": "naive_current_bottleneck",
+  "not_features": [
+    "elapsed_min",
+    "day_index",
+    "target_bottleneck",
+    "target_level",
+    "naive_current_bottleneck"
+  ],
+  "dropped_constant_features": [
+    "free_flow_speed"
+  ],
+  "split_cut_train_min": 3048,
+  "split_cut_val_min": 3698,
+  "n_train": 3029,
+  "n_val": 645,
+  "n_test": 651,
+  "has_temporal_signal": false
+}
